@@ -288,10 +288,8 @@ public class Pizza {
 checkbox 요소들이 여러 개 있는데, 이것들 모두 ingredients라는 이름을 갖고 텍스트 입력 요소의 이름은 name인 것을 알 수 있다. 이 필드들은 Pizza 클래스의 ingredients 및 name 속성 값과 바인딩된다.
 
 
-
-
-
-
+반환값에서 rediret:가 제일 앞에 붙는데 이것은
+상대경로인 /orders/current 로 재접속되어야 한다는 것을 나타낸다.
 
 
 
