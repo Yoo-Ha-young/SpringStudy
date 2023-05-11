@@ -5,7 +5,7 @@
 고객 자신이 원하는 피자를 디자인할 때 식자재를 보여주고, 선택할 수 있는 페이지가 피자 클라우드 웹 어플리케이션에 있어야한다.
 선택할 수 있는 식자재 내역은 수시로 변경될 수 있다.
 
-### 도메인 설정 : 
+## 도메인 설정 : 
 해당 어플리케이션의 이해에 필요한 개념을 다루는 영역
 
 - 피자 식자재 속성을 정의하는 도메인 클래스
@@ -48,7 +48,7 @@ public class Pizza {
 }
 ~~~
 
-### 컨트롤러 설정 : 
+## 컨트롤러 설정 : 
 스프링 웹에서 데이터를 가져오고 처리하는 것은 컨트롤러의 일,
 컨트롤러는 스프링 MVC 프레임워크의 중심적인 역할을 수행한다.
 
@@ -252,6 +252,50 @@ JSP(JavaServer Pages), Thymeleaf, FreeMarker, Mustache, 그루비(Groovy) 기반
 ```
 
 
+## 폼 입력 처리하고 검사하기 : 
+폼 제출 처리하기
+
+`form method="POST" th:object="${pizza}">`
+뷰(design.html)의 `<form>`태그에서 HTML 메서드 속성이 POST로 설정되어 있다. 
+
+그러나 action 속성이 선언되지 선언되지 않았다. 
+이 경우 폼이 제출되면 브라우저가 폼의 모든 데이터를 모아서 폼에 나타난 GET 요청과 같은 경로(/design)로 서버에 HTTP POST 요청을 전송한다. 따라서 이 요청을 처리하는 컨트롤러의 메서드가 있어야 한다.
 
 
-* 폼 입력 처리하고 검사하기
+
+~~~
+	@PostMapping
+	public String processDesign(Pizza design) {
+		// 이 지점에서 피자 디자인(선택된 식자재 내역)을 저장한다.
+		log.info("Processing design: " + design);
+		return "redirect:/orders/current";	
+	}
+
+~~~
+클래스 수준의 @RequestMapping 과 연관하여 @PostMapping 어노테이션이 지정된  processDedign() 메서드는 /design 경로의 POST 요청을 처리함을 나타낸다. 따라서 PIZZA 디자인을 한 사용자가 제출한 정보를 이곳에서 처리한다.
+
+디자인 폼이 제출될 때 메서드의 인자로 전달되는 Pizza 객체의 속성과 바인딩되어 객체를 사용해서 어떤 것이든 원하는 처리를 할 수 있다.
+
+
+
+```
+@Data
+public class Pizza {
+	private String name;
+	private List<String> ingredients;
+}
+```
+checkbox 요소들이 여러 개 있는데, 이것들 모두 ingredients라는 이름을 갖고 텍스트 입력 요소의 이름은 name인 것을 알 수 있다. 이 필드들은 Pizza 클래스의 ingredients 및 name 속성 값과 바인딩된다.
+
+
+
+
+
+
+
+
+
+
+
+
+
