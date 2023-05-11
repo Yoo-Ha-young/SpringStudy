@@ -137,7 +137,7 @@ public class DesignPizzaController {
 식자재의 유형(고기, 치즈, 소스 등)을 List에서 filterByType 메서드로 필터링한 후
 showDesignForm()의 인자로 전달되는 Model 객체의 속성으로 추가한다.
 
-##### * Model
+##### Model
 컨트롤러와 데이터를 보여주는 뷰 사이에서 데이터를 운반하는 객체
 Model 객체의 속성에 있는 데이터는 뷰가 알 수 있는 서블릿 요청 속성들로 복사된다.
 
@@ -150,6 +150,106 @@ Model 객체의 속성에 있는 데이터는 뷰가 알 수 있는 서블릿 �
 * **뷰 템플릿 라이브러리 선택하기**
 JSP(JavaServer Pages), Thymeleaf, FreeMarker, Mustache, 그루비(Groovy) 기반 템플릿
 
+빌드파일에 타임리프 의존성을 추가하여
+스프링 부트 자동 구성에서 런타임 시에 classpath의 Thymeleaf를 찾아 빈을 자동으로 생성한다.
+	
+``` <p th:text="${키}">placeholder message</p```
+타임리프 템플릿은 요청 데이터를 나타내는 요소 속성을 추가로 갖는 HTML이다. 
+키가 요청 속성이고, 이것을 타임리프를 사용해 HTML `<p>`태그로 나타낸다.	
+`<p>` 요소의 몸체는 키인 서블릿 요청 속성의 값으로 교체되며, 
+`th:text`는 교체를 수행하는 타임리프 네임스페이스 속성이다.
+`${}` 연산자는 요청 속성의 값을 사용하라는 것이다.	
+
+~~~
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>Spring Study</title>
+	<link rel="stylesheet" th:href="@{/style.css}" />
+</head>
+
+<body>
+	<h1>Design your Pizza!</h1>
+	<img th:src="@{/images/newPizza.jpg}"/>	
+~~~
+`<body>`태그 맨 앞에는 피자 클라우드 로고 이미지와 함께 `<head>` 태그에 있는 `<link>` 스타일시트를 참조한다.
+두가지 모두 `Thymelef @{}` 연산자가 참조되었다. 참조되는 위치인 컨텍스트 상대 경로를 알려주기 위해서이다.	
+
+```	
+	<form method="POST" th:object="${pizza}">
+	<span class="validationError"
+		th:if="${#fields.hasErrors('ingredients')}"
+		th:errors="*{ingredients}">Ingredient Error</span>	
+```
+
+
+
+
+각 유형의 식자재 마다 `<div>`코드가 반복되어 있다.
+		
+~~~
+		<div class="grid">
+		
+			<div class="ingredient-group" id="wraps">
+
+				<h3>Designate your wrap:</h3>			
+				
+				<div th:each="ingredient : ${wrap}">
+					<input name="ingredient" type="checkbox" th:value=${ingredient.id}/>
+					<span th:text="${ingredient.name}">INGREDIENT</span><br/>
+				</div>			
+			</div>
+~~~			
+
+`th:each`속성은 컬렉션을 반복 처리하며, 해당 컬렉션의 각 요소를 HTML로 나타낸다. 따라서 리스트에 저장된 피자 식자재(ingredient 객체)를 모델 데이터로부터 뷰에 보여준다. wrap 요청 속성에 있는 컬렉션의 각 항복에 대해 하나씩 `<div>`를 반복해 `th:each`속성을 사용하고, 각 반복에서 식자재 항목이 `ingredient`라는 이름의 타임리프 변수와 바인딩된다.
+			
+```			
+			<div class="ingredient-group" id="proteins">
+				<h3>Pick your protein:</h3>
+				<div th:each="ingredient : ${protein}">
+					<input name="ingredient" type="checkbox" th:value=${ingredient.id}/>
+					<span th:text="${ingredient.name}">INGREDIENT</span><br/>
+				</div>			
+			</div>
+			
+			<div class="ingredient-group" id="cheeses">
+				<h3>Choose your cheese:</h3>
+				<div th:each="ingredient : ${cheese}">
+					<input name="ingredient" type="checkbox" th:value=${ingredient.id}/>
+					<span th:text="${ingredient.name}">INGREDIENT</span><br/>
+				</div>			
+			</div>
+			
+			<div class="ingredient-group" id="veggies">
+				<h3>Determine your veggies:</h3>
+				<div th:each="ingredient : ${veggies}">
+					<input name="ingredient" type="checkbox" th:value=${ingredient.id}/>
+					<span th:text="${ingredient.name}">INGREDIENT</span><br/>
+				</div>			
+			</div>
+			
+		</div>
+		
+		
+		<div>
+			<h3>Name your pizza creation:</h3>
+			<input type="text" th:field="*{name}"/>
+			<span th:text="${#fields.hasErroers('name')}">XXX</span>
+			<span class="validationError"
+				th:if="${#fields.hasErrors('name')}"
+				th:errors="*{name}"> Name Error </span>
+			<br/>
+			
+			<button>Submit your Pizza!</button>
+		</div>		
+	</form>
+	
+</body>
+
+</html>
+```
 
 
 
