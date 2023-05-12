@@ -253,7 +253,7 @@ JSP(JavaServer Pages), Thymeleaf, FreeMarker, Mustache, 그루비(Groovy) 기반
 
 
 ## 폼 입력 처리하고 검사하기 : 
-폼 제출 처리하기
+### ① 폼 제출 처리하기
 
 `form method="POST" th:object="${pizza}">`
 뷰(design.html)의 `<form>`태그에서 HTML 메서드 속성이 POST로 설정되어 있다. 
@@ -287,13 +287,173 @@ public class Pizza {
 ```
 checkbox 요소들이 여러 개 있는데, 이것들 모두 ingredients라는 이름을 갖고 텍스트 입력 요소의 이름은 name인 것을 알 수 있다. 이 필드들은 Pizza 클래스의 ingredients 및 name 속성 값과 바인딩된다.
 
-
 반환값에서 rediret:가 제일 앞에 붙는데 이것은
 상대경로인 /orders/current 로 재접속되어야 한다는 것을 나타낸다.
+~~~
+package springstudyfirst.web;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import springstudyfirst.Order;
+
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+@RequestMapping("/orders")
+public class OrderController {
+
+	@GetMapping("/current")
+	public String orderForm(Model model) {
+		model.addAttribute("order", new Order());
+		return "orderForm";
+	}
+	
+	
+	// 제출된 주문을 처리
+	@PostMapping
+	public String processOrder(Order order) {
+		log.info("Order submit: " + order);
+		return "redirect:/";
+	}
+}
+~~~
+
+
+`log.info("Order submit: " + order);` 에서 Submit order 버튼을 누르고 넘기면, log info를 통해서 콘솔탭에 출력이되고, redirect: 를 통해서 다시 초기화면으로 돌아가게된다.
+
+
+### ② 폼 입력 유효성 검사
+생성되는 피자의 정보를 입력하지 않거나, 지정한 범위에서 벗어나거나 유효하지 않은 정보를 입력한다면 처리를 해주어야한다.
+이렇게 필드들의 유효성 검사를 if문으로 검사하기에는 코드가 너저분해지고 번거로워지며 코드파악, 디버깅이 어려워질 수 있다.
+이 기능은 자바 스프링 빈 유효성 검사(Bean Validation API)를 통해 구현한다.
+
+스프링 부트를 사용하면 유효성 검사 API와 이 API를 구현한 Hibernate(하이버네이트) 컴포넌트가 스프링 부트의 웹 스타터 의존성으로 자동 추가된다.
+
+① 유효성을 검사할 클래스에 검사 규칙을 선언한다.
+Pizza 클래스 : 
+NotNull 어노테이션을 통해 Null 값은 받지 않는다.
+Size 어노테이션으로 최소길이를 정해두고 지켜지지 않았을 경우 message를 뱉는다.
+~~~
+import java.util.List;
+import lombok.Data;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+@Data
+public class Pizza {
+	
+	@NotNull
+	@Size(min=5, message="Name must be at least 5 characters long")
+	private String name;
+
+	@NotNull
+	@Size(min=1, message="You must choose at least 1 ingredient")
+	private List<String> ingredients;
+	
+}
+~~~
+
+Order 클래스 : 
+NotNull 어노테이션을 통해 Null 값은 받지 않고, 지켜지지 않았을 경우 message를 뱉는다.
+CreditCardNumber를 통해 속성값이 Luhn 알고리즘 검사에 합격한 유효한 신용 카드 번호여야 한다는 것을 선언해주었다.
+이 알고리즘 검사는 사용자의 입력 실수나 고의적인 악성 데이터를 방지해주며, 입력된 신용 카드 번호가 실제로 존재하는 것인지, 또는 대금 지불에 사용될 수 있는지는 검사하지 못한다.(이것 까지 하려면 실시간으로 금융망과 연동해야 함)
+
+Pattern 어노테이션으로 MM/YY형식의 검사를 수행하는데, 정규 표현식으로 패턴을 직접 지정해준다.
+Digits 어노테이션으로 입력 값이 정확하게 세자리 숫자인지 검사한다.
+
+message 속성은 사용자가 입력한 정보가 어노테이션으로 선언된 유효성 규칙을 충족하지 못할 때 보여줄 메시지를 속성에 정의한다.
+
+```
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.CreditCardNumber;
+import lombok.Data;
+
+@Data
+public class Order {
+	
+	@NotBlank(message="Name is required")
+	private String deliveryName;
+
+	@NotBlank(message="Street is required")
+	private String deliveryStreet;
+	
+	@NotBlank(message="City is required")
+	private String deliveryCity;
+
+	@NotBlank(message="State is required")
+	private String deliveryState;
+
+	@NotBlank(message="Zip code required")
+	private String deliveryZip;
+
+	@CreditCardNumber(message="Not a valid credit card number")
+	private String creditCardNumber;
+
+	@Pattern(regexp="^(0[1-9]1[0-2])([\\/]([1-9][0-9])",
+		message="Must be formatted MM/YY")
+	private String creditCardExpiration;
+	
+	@Digits(integer=3, fraction=0, message="Invalid CVV")
+	private String creditCardCVV;
+}
+```
 
 
 
+② 유효성 검사를 해야 하는 컨트롤러 메서드에 검사를 수행한다는 것을 지정한다.
+~~~
+	@PostMapping
+	public String processDesign(@Valid Pizza design, Errors errors) {
+		if(errors.hasErrors()) {
+			return "design";
+		}
+		
+		// 이 지점에서 피자 디자인(선택된 식자재 내역)을 저장한다.
+		log.info("Processing design: " + design);
+		return "redirect:/orders/current";	
+	}
+~~~
 
 
+```
+	@PostMapping
+	public String processOrder(@Valid Order order, Errors errors) {
+		if(errors.hasErrors()) {
+			return "orderForm";
+		}
+		
+		log.info("Order submit: " + order);
+		return "redirect:/";
+	}
+```
+
+에러 상세 내역이 Errors 객체에 저장되어 메서드 밖으로 저장된다. 
+if 문에서 errors의 hasErrors()메서드를 호출하여 검사 에러가 있는지 확인한다.
+그리고 에러가 있다면 중지하고 뷰 이름을 반환하여 폼이 다시 보이게한다.
+
+③ 검사 에러를 보여주도록 폼 뷰를 수정한다.
+
+~~~
+	<h3>Here's how I'll pay...</h3>	
+	<label for="creditCardNumber">Credit Card #: </label>
+	<input type="text" th:field="*{creditCardNumber}"/>
+	<span class="validationError"
+		th:if="${#fields.hasErrors('creditCardNumber')}"
+		th:errors="*{creditCardNumber}">CC Num error</span>
+	<br/>
+~~~
+`<span>` 요소의 class 속성은 사용자의 주의를 끌기 위한 에러의 명칭(validationError)을 지정하는 데 사용된다. 
+
+그리고 `th:if` 속성에서 이 `<span>`을 보여줄지 말지 결정하고 이때 `fields`속성의 hasErrors() 메서드를 사용해서 creditCardNumber 필드에 에러가 있는지 검사한다. 그리고 만일 있다면 `<span>을 나타낸다.
+
+`th:errors` 속성은 필드를 참조하고 그리고 이 필드에 에러가 있다고 가정하고 `<span>에 사전 지정된 메시지CC Num Error)
+를 검사 에러 메시지로 교체한다.
 
 
