@@ -1,4 +1,34 @@
 # 모델 데이터:정보 브라우저에 보여주기
+
+#### **스프링에서 지원되는 템플릿**
+FreeMarker : spring-boot-starter-freemarker
+Groovy 템플릿 : spring-boot-starter-groovy-template
+JavaServer Pages(JSP) : 톰캐시나 제티 서블릿 컨테이너 자체에서 제공됨
+Mustache : spring-boot-starter-mustache
+Thymeleaf : spring-boot-starter-thymeleaf
+
+뷰는 사용시 템플릿을 선택하고 의존성으로 추가한 후 /templates에 템플릿을 작성한다.
+그러면 스프링 부트가 선택한 템플릿 라이브러리를 찾아서 스프링 MVC 컨트롤러의 뷰로 사용할 컴포넌트를 자동으로 구성한다.
+
+
+#### **템플릿 캐싱**
+템플릿은 최초 사용될 때 한 번만 파싱(코드 분석)된다. 그리고 파싱된 결과는 추후 사용을 위해 캐시에 저장된다.
+이것은 프로덕션에서 어플리케이션을 실행할 때 좋은 기능이다. 
+매번 요청을 처리할 때마다 불필요하게 템플릿 파싱을 하지 않으므로 성능을 향상시킬 수 있기 때문이다.
+
+템플릿 캐싱을 비활성화 하기 위해 각 템플릿이 캐싱 속성만 flase로 설정하면 된다.
+FreeMarker : spring.freemarker.cache
+Groovy 템플릿 : spring.groovy.template.cache
+Mustache : spring.mustache.cache
+Thymeleaf : spring.thymeleaf.cache
+
+properties 파일에서 각 =false 로 속성값을 설정하면 캐싱 비활성화가 된다.
+
+하지만 스프링부트의 DevTools을 쓰면 개발시점에 모든 템플릿 라이브러리의 캐싱을 비활성화 시켜주므로 따로 지정해주지 않아도된다.
+그렇지만 어플리케이션이 실무 운영을 위해 배포될 때는 DevTools 자시이 비활성화되므로 템플릿 캐싱이 활성화될 수 있다.
+
+----
+
 피자 클라우드는 온라인으로 피자를 주문할 수 있는 어플리케이션이다.
 피자의 식자재를 보여주는 팔레트를 사용해 창의적으로 피자 토핑을 할 수 있게 한다.
 
