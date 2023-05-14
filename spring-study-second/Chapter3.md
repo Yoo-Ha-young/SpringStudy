@@ -18,3 +18,43 @@
 - id를 사용하여 하나의 Ingredient를 쿼리
 - Ingredient 객체를 데이터베이스에 저장
 
+```
+package springstudysecond.data;
+
+import springstudysecond.Ingredient;
+
+public interface IngredientRepository {
+	Iterable<Ingredient> findAll();
+	Ingredient findById(String id);
+	Ingredient save(Ingredient ingredient);
+}
+```
+
+Ingredient 리퍼지터리가 해야 할일을 IngredientRepository 인터페이스에 정의했으므로 JdbcTemplate을 이용해 데이터베이스 쿼리에 사용할 수 있도록 인터페이스를 구현해줘야 한다.
+
+
+~~~
+package springstudysecond.data;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class JdbcIngredientRepository {
+	private JdbcTemplate jdbc;
+	
+	@Autowired
+	public JdbcIngredientRepository(JdbcTemplate jdbc) {
+		this.jdbc = jdbc;
+	}
+}
+~~~
+
+리퍼지토리 클래스에 @Repository 어노테이션을 지정하면 스프링 컴포넌트 검색에서 이 클래스를 자동으로 찾아서 스프링 어플리케이션 컨텍스트의 빈으로 생성해준다.
+
+그리고 @Autowired 어노테이션을 통해서 스프링이 해당 빈을 JdbcTemplate에 주입(연결)해준다.
+
+
+
+
