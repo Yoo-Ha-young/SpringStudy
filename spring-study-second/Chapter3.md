@@ -363,8 +363,85 @@ public class DesignPizzaController {
 : order()와 pizza()에는 메서드 어노테이션 @ModelAttribute이 추가되었다. Order 객체가 모델에 생성되도록 해준다.
 해야 한다.
 
-디자인을 **실제로 처리(저장)하는 일**은 processDesign() 메서드에서 수행된다.
+- processDesign() 메서드 : 디자인을 **실제로 처리(저장)하는 일** 수행된다.
 이 메서드에서 Pizza  및 Errors 객체와 더불어 Order 객체도 인자로 받는다. 
 
 Order 매개변수에는 @ModelAttribute 어노테이션이 지정되었다.
-이 매개변수의 값이 모델로부터 전달되어야 한다는 것과 스프링 MVC가 이 매개변수에 요청 매개변수를 바인딩하지 않아야 한다는 것을 나타내기 위해서다.
+**이 매개변수의 값이 모델로부터 전달되어야 한다는 것**과 스프링 MVC가 이 매개변수에 **요청 매개변수를 바인딩하지 않아야 한다는 것**을 나타내기 위해서다.
+
+**전달된 데이터의 유효성 검사를한 후**  processDesign()에서는 주입된 PizzaRepository를 사용해서 피자를 저장한다.
+그 다음 세션에 보존된 Order에 Pizza 객체를 추가한다.
+
+~~~
+import org.hibernate.validator.constraints.CreditCardNumber;
+
+import lombok.Data;
+
+@Data
+public class Order {
+
+	private List<Pizza> pizzas = new ArrayList<>();
+...
+	
+	public void addDesign(Pizza design) {
+		this.pizzas.add(design);
+	}
+}
+~~~
+
+사용자가 주문 폼에 입력을 완료하고 제출할 때까지 Order 객체는 세션에 남아있고 데이터베이스에 저장되지 않는다.
+주문을 저장하기 위해 ORderController가 Order Repository를 사용할 수 있어야 한다.
+
+## SimpleJdbcInsert를 사용해서 데이터 추가
+
+- 피자를 저장 :  해당 피자의 이름과 생성 시간을 Pizza 테이블에 저장하는 것은 물론이며, 
+해당 피자의 id 및 연관된 삭자재들의 id도 Pizza_Ingredients 테이블에 저장한다.
+- 주문을 저장 : 주문 데이터를 Pizza_Order 테이블에 저장, 해당 주문의 각 피자에 대한 id도 Pizza_Order_Pizzas 테이블에 저장
+
+기능이 추가되거나 연결이 복잡해질 경우에는 PreparedStatementCreator 보다 **SimpleJdbcInsert**를 사용한다.
+(이것은 보다 쉽게 데이터를 추가할 수 있도록 Jdbc를 래핑한 객체임)
+
+
+
+## 데이터 타입을 변환해 주는 컨버터 converter 클래스
+
+- 스프링의 컨버터 인터페이스에 정의된 convert() 메서드 : 
+우리가 Converter에 지정한 타입 변환이 필요할 떄 conver() 메서드가 자동호출 된다.
+어플리케이션에서 String 타입의 식자재 ID를 사용해서 데이터베이스에 저장된 특정 식자재 데이터를 읽은 후 Ingredient 객체로 변환하기 위해 컨버터가 사용된다.
+그리고 컨버터로 변환된 Ingredient 객체는 다른 곳에서 List에 저장된다.
+
+```
+package springstudysecond.web;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
+
+import springstudysecond.Ingredient;
+import springstudysecond.data.IngredientRepository;
+
+@Component
+public class IngredientByIdConverter implements Converter<String, Ingredient>{
+	
+	private IngredientRepository ingredientRepo;
+	
+	@Autowired
+	public IngredientByIdConverter(IngredientRepository ingredientRepo) {
+		this.ingredientRepo = ingredientRepo;
+	}
+	
+	@Override
+	public Ingredient convert(String id) {
+		return ingredientRepo.findById(id);
+	}
+	
+}
+```
+
+@Component 어토테이션으로 스프링에 의해 자동 생성 및 주입되는 빈으로 생성된다.
+그리고 생성자에 @Autowired 어노테이션으로 지정하여 인터페이스를 구현한 빈(JdbcIngredientRepository)인스턴스가 생성자의 인자로 주입된다.
+
+`Converter<변환할 값의 타입, 변환된 값타입>` 으로 써준다. 
+convert() 메서드에서 IngredientRepository 인터페이스를 구현한 Jdbc Ingredient Repository의 메서드 findById()를 호출한다.
+
+
