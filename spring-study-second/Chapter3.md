@@ -55,6 +55,56 @@ public class JdbcIngredientRepository {
 
 그리고 @Autowired 어노테이션을 통해서 스프링이 해당 빈을 JdbcTemplate에 주입(연결)해준다.
 
+```
+package springstudysecond.data;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import springstudysecond.Ingredient;
+
+@Repository
+public class JdbcIngredientRepository implements IngredientRepository{
+	private JdbcTemplate jdbc;
+	
+	@Autowired
+	public JdbcIngredientRepository(JdbcTemplate jdbc) {
+		this.jdbc = jdbc;
+	}
+
+	@Override
+	public Iterable<Ingredient> findAll() {
+		return jdbc.query("select id, name, type from Ingredient", 
+				this::mapRowToIngredient);
+	}
+
+	@Override
+	public Ingredient findById(String id) {
+		return jdbc.queryForObject(
+				"select id, name, type from Ingredient where id=?",
+				this::mapRowToIngredient, id);
+	}
+
+	private Ingredient mapRowToIngredient(ResultSet rs, int rowNum) throws SQLException{
+		return new Ingredient(
+				rs.getString("id"),
+				rs.getString("name"),
+				Ingredient.Type.valueOf(rs.getString("type")));
+	}
+	
+}
+```
+위의 코드는 `implements IngredientRepository`로 인터페이스를 상속받아 구현한 내용이다.
+인터페이스를 상속받을 시에 안에 있는 메서드를 구현해줘야한다.
+
+`findAll()` : 객체가 저장된 컬렉션을 반환하는 메서드로 query() 메서드를 사용하며, 두개의 인자를 받는다. 
+첫 번째 인자는 쿼리를 수행하는 SQL 명령어이며, 두번째 인사는 스프링의 RowMapper 인터페이스를 구현한 mapRowToIngredient 메서드이다.
+
+`findById(String id)` : 하나의 Ingredient 객체만 반환한다. 따라서 query()볃 대신 JdbcTemplate의 queryForObject() 메서드를 사용한다. 이 메서드는 query() 메서드와 같으며 세번째 인자로 검색할 행의 id를 전달한다. 그러면 이 id가 첫 번쨰 인자로 전달된 SQL에 있는 물음표 대신 교체되어 쿼리에 사용된다.
 
 
 
