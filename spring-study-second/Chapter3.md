@@ -1,4 +1,5 @@
 # 데이터베이스 연동시키기
+https://github.com/Yoo-Ha-young/SpringStudy/tree/main/spring-study-second/src/main/java/springstudysecond/data
 
 - 스프링 JdbcTemplate
 - SimpleJdbcInsert 사용
