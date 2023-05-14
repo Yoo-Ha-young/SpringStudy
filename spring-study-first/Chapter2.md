@@ -1,11 +1,11 @@
 # 모델 데이터:정보 브라우저에 보여주기
 
 #### **스프링에서 지원되는 템플릿**
-FreeMarker : spring-boot-starter-freemarker
-Groovy 템플릿 : spring-boot-starter-groovy-template
-JavaServer Pages(JSP) : 톰캐시나 제티 서블릿 컨테이너 자체에서 제공됨
-Mustache : spring-boot-starter-mustache
-Thymeleaf : spring-boot-starter-thymeleaf
+- FreeMarker : spring-boot-starter-freemarker
+- Groovy 템플릿 : spring-boot-starter-groovy-template
+- JavaServer Pages(JSP) : 톰캐시나 제티 서블릿 컨테이너 자체에서 제공됨
+- Mustache : spring-boot-starter-mustache
+- Thymeleaf : spring-boot-starter-thymeleaf
 
 뷰는 사용시 템플릿을 선택하고 의존성으로 추가한 후 /templates에 템플릿을 작성한다.
 그러면 스프링 부트가 선택한 템플릿 라이브러리를 찾아서 스프링 MVC 컨트롤러의 뷰로 사용할 컴포넌트를 자동으로 구성한다.
@@ -17,10 +17,10 @@ Thymeleaf : spring-boot-starter-thymeleaf
 매번 요청을 처리할 때마다 불필요하게 템플릿 파싱을 하지 않으므로 성능을 향상시킬 수 있기 때문이다.
 
 템플릿 캐싱을 비활성화 하기 위해 각 템플릿이 캐싱 속성만 flase로 설정하면 된다.
-FreeMarker : spring.freemarker.cache
-Groovy 템플릿 : spring.groovy.template.cache
-Mustache : spring.mustache.cache
-Thymeleaf : spring.thymeleaf.cache
+- FreeMarker : spring.freemarker.cache
+- Groovy 템플릿 : spring.groovy.template.cache
+- Mustache : spring.mustache.cache
+- Thymeleaf : spring.thymeleaf.cache
 
 properties 파일에서 각 =false 로 속성값을 설정하면 캐싱 비활성화가 된다.
 
