@@ -281,3 +281,90 @@ PreparedStatementCreator도 객체가 생성되면 이 객체와 KeyHolder 객�
 그 다음 save() 메서드로 제어가 복귀된 후 saveIngredientToTaco()를 호출해서 Taco객체의 List에 저장된 각 Ingredient 객체를 반복처리한다.
 
 
+
+###  피자 주문 저장하고 주문과 연결시키기
+```
+@Slf4j
+@Controller
+@RequestMapping("/design")
+@SessionAttributes("order")
+public class DesignPizzaController {
+	
+	
+	// 피자 디자인 저장 및 주문과 연결시키기 위해 Order, Pizza 생성자 생성
+	@ModelAttribute(name = "order")
+	public Order order() {
+		return new Order();
+	}
+
+	@ModelAttribute(name = "pizza")
+	public Pizza pizza() {
+		return new Pizza();
+	}
+
+	private final IngredientRepository ingredientRepo;
+	private PizzaRepository pizzaRepo; // 피자레파지토리 주입하고 사용
+	
+	@Autowired                                                          // 피자레파지토리 사용부분
+	public DesignPizzaController(IngredientRepository ingredientRepo, PizzaRepository pizzaRepo) {
+		this.ingredientRepo = ingredientRepo;
+		this.pizzaRepo = pizzaRepo;
+	}
+	
+	@GetMapping
+	public String showDesignForm(Model model) {
+		
+		List<Ingredient> ingredients = new ArrayList<>();
+		ingredientRepo.findAll().forEach(i -> ingredients.add(i));
+		
+		Type[] types = Ingredient.Type.values();
+		for (Type type : types) {
+			model.addAttribute(type.toString().toLowerCase(),
+					filterByType(ingredients, type));
+		}
+		
+		model.addAttribute("pizza", new Pizza());
+		
+		return "design";
+	}
+
+	private List<Ingredient> filterByType(List<Ingredient> ingredients, Type type) {
+		// TODO Auto-generated method stub
+		return ingredients
+				.stream()
+				.filter(x -> x.getType().equals(type))
+				.collect(Collectors.toList());
+	}
+	
+	
+	@PostMapping
+	public String processDesign(
+			@Valid Pizza design, Errors errors,
+			@ModelAttribute Order order) { // 주문클래스 추가
+		if(errors.hasErrors()) {
+			return "design";
+		}
+		
+		// 피자 디자인(선택된 식자재 내역)을 저장
+		Pizza saved = pizzaRepo.save(design);
+		order.addDesign(saved);
+//		log.info("Processing design: " + design);
+		
+		return "redirect:/orders/current";
+	}
+	
+}
+```
+- @SessionArttributes("order")가 추가되고 
+: 하나의 세션에서 생성되는 Pizza 객체와 다르게 주문은 **다수의 HTTP 요청에 걸쳐 존재**
+그러면 세션에서 계속 보존되면서 다수의 요청에 걸쳐 사용될 수 있다.
+
+- @ModelAttribute(name = "") 
+: order()와 pizza()에는 메서드 어노테이션 @ModelAttribute이 추가되었다. Order 객체가 모델에 생성되도록 해준다.
+해야 한다.
+
+디자인을 **실제로 처리(저장)하는 일**은 processDesign() 메서드에서 수행된다.
+이 메서드에서 Pizza  및 Errors 객체와 더불어 Order 객체도 인자로 받는다. 
+
+Order 매개변수에는 @ModelAttribute 어노테이션이 지정되었다.
+이 매개변수의 값이 모델로부터 전달되어야 한다는 것과 스프링 MVC가 이 매개변수에 요청 매개변수를 바인딩하지 않아야 한다는 것을 나타내기 위해서다.
