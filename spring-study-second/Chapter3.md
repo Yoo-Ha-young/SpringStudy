@@ -445,3 +445,189 @@ public class IngredientByIdConverter implements Converter<String, Ingredient>{
 convert() 메서드에서 IngredientRepository 인터페이스를 구현한 Jdbc Ingredient Repository의 메서드 findById()를 호출한다.
 
 
+
+# 스프링 데이터 JPA 사용해서 데이터 저장하고 사용
+- 스프링 데이터 JPA : 관계형 데이터베이스 JPA 퍼시스턴스
+- 스프링 데이터 MongoDB : 몽고 문서형 데이터베이스의 퍼시스턴스
+- 스프링 데이터 Neo4 : Neo4j 그래프 데이터베이스의 퍼시스턴스
+- 스프링 데이터 레디스 : 레디스 키-값 스토어의 퍼시스턴스
+- 스프링 데이터 카산드라 : 카산드라 데이터베이스의 퍼시스턴스
+다소 규모가 큰 프로젝트일 때는 다양한 데이터베이스 유형을 사용한 데이터 퍼시스턴스에 초점을 둔다.
+
+스프링 데이터에서는 레퍼지토리 인터페이스를 기반으로 이 인터페이스를 구현하는 레포지토리를 자동 생성해 준다.
+
+~~~
+package springstudysecond;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+
+@Data
+@RequiredArgsConstructor
+@NoArgsConstructor(access=AccessLevel.PRIVATE, force=true)
+@Entity
+public class Ingredient {
+	@Id
+	private final String id;
+	
+	private final String name;
+	private final Type type;
+	
+	public static enum Type{
+		WRAP, PROTEIN, VEGGIES, CHEESE, SAUCE
+	}
+}
+~~~
+- @Entity : Ingredien를 JPA 개체(entity)로 선언하기 위해 해당 어노테이션을 추가
+- @Id : id 속성에는 반드시 지정해야 하는 어노테이션으로 이 속성이 데이터베이스의 개체를 고유하게 식별한다는 것을 나타낸다.
+- @NoArgsConstructor :  JPA에서 개체가 인자 없는 생성자를 가져야 한다. 따라서 인자 없는 생성자의 사용을 원치 않을땐 access 속성을 AccessLevel.PRIVATE로 설정하여 외부에서는 사용하지 못하게 한다. 그리고 초기화가 필요한 final 속성들이 있으므로 force 속성을 true로 설정한다.
+
+
+
+```
+package springstudysecond;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import lombok.Data;
+
+@Data
+@Entity
+public class Pizza {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private Date createdAt;
+	
+	@NotNull
+	@Size(min=5, message="Name must be at least 5 characters long")
+	private String name;
+	
+	@ManyToMany(targetEntity = Ingredient.class)
+	@Size(min=1, message="You must choose at least 1 ingredient")
+	private List<Ingredient> ingredients;
+	
+	@PrePersist
+	void createdAt() {
+		this.createdAt = new Date();
+	}
+}
+```
+
+- @GeneratedValue(strategy = GenerationType.AUTO) : 데이터베이스가 자동으로 생성해주는 ID 값이 사용된다.
+- @ManyToMany(targetEntity = Ingredient.class) : Pizza 객체는 많은 재료, Ingredient 객체를 가질 수 있다. 하나의 Ingredient는 여러 Pizza 객체에 포함될 수 있다.
+- @PrePersist : createdAt 속성을 현재 일자와 시간으로 설정하는데 사용된다.
+
+
+
+~~~
+package springstudysecond;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+
+import org.hibernate.validator.constraints.CreditCardNumber;
+
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name="Pizza_Order")
+public class Order {
+	private static final long serialVersionUID = 1L;
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+	private Date placedAt;
+
+	@NotBlank(message="Name is required")
+	private String deliveryName;
+	@NotBlank(message="Street is required")
+	private String deliveryStreet;
+	@NotBlank(message="City is required")
+	private String deliveryCity;
+	@NotBlank(message="State is required")
+	private String deliveryState;
+	@NotBlank(message="Zip code is required")
+	private String deliveryZip;
+	@CreditCardNumber(message="Not a valid credit card number")
+	private String creditCardNumber;
+	@Pattern(regexp="^(0[1-9]1[0-2])(\\/)([1-9][0-9])",
+			message="Must be formatted MM/YY")
+	private String creditCardExpiration;
+	@Digits(integer=3, fraction=0, message="Invalid CVV")
+	private String creditCardCVV;
+
+	@ManyToMany(targetEntity = Pizza.class)
+	private List<Pizza> pizzas = new ArrayList<>();
+	
+	public void addDesign(Pizza design) {
+		this.pizzas.add(design);
+	}
+	
+	@PrePersist
+	void placedAt() {
+		this.placedAt = new Date();
+	}
+}
+~~~
+
+@Table : Order 개체가 데이터베이스의 Pizza_Order 테이블에 저장되어야 한다는 것을 나타낸다. 어떤 개체 entity에도 사용될 수 있지만, Order의 경우는 이 어노테이션을 지정하지 않으면 JPA가 Order라는 이름의 테이블로 Order 개체를 저장할 것이다. 하지만 SQL의 예약어인 Order로 지정하면 문제가 생기기 때문에 별도로 지정해줄 필요가 있다.
+
+```
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
+
+@Component
+public class IngredientByIdConverter implements Converter<String, Ingredient>{
+	
+	private IngredientRepository ingredientRepo;
+	
+	@Autowired
+	public IngredientByIdConverter(IngredientRepository ingredientRepo) {
+		this.ingredientRepo = ingredientRepo;
+	}
+	
+	@Override
+	public Ingredient convert(String id) {
+		Optional<Ingredient> optionalIngredient = ingredientRepo.findById(id);
+		return optionalIngredient.isPresent() ?
+				optionalIngredient.get() : null;
+ 	}	
+}
+```
+String 타입의 식자재 ID를 사용해서 데이터베이스에 저장된 특정 식자재 데이터를 읽은 후 Ingredient 객체로 변환하기 위해 컨버터를 사용한다.
+Optional로 받는 것은 식자재를 찾지 못했을 때 null이 반환될 수 있으므로 안전한 처리를 위해 변경한다.
+
+
