@@ -1,17 +1,17 @@
 package springstudythird.web;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import springstudythird.Ingredient;
+import springstudythird.*;
 import springstudythird.data.IngredientRepository;
 
+import java.util.Optional;
+
 @Component
-public class IngredientByIdConverter implements Converter<String, Ingredient>{
-	
+public class IngredientByIdConverter
+		implements Converter<String, Ingredient> {
 	private IngredientRepository ingredientRepo;
 	
 	@Autowired
@@ -23,7 +23,6 @@ public class IngredientByIdConverter implements Converter<String, Ingredient>{
 	public Ingredient convert(String id) {
 		Optional<Ingredient> optionalIngredient = ingredientRepo.findById(id);
 		return optionalIngredient.isPresent() ?
-				optionalIngredient.get() : null;
- 	}
-	
+							optionalIngredient.get() : null;
+	}
 }

@@ -1,8 +1,9 @@
 package springstudythird.data;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
 
 import springstudythird.Pizza;
 
-public interface PizzaRepository extends JpaRepository<Pizza, Long> {
+public interface PizzaRepository extends CrudRepository<Pizza, Long> {
+	
 }

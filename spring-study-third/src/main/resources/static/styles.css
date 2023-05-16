@@ -1,20 +1,20 @@
-@charset "UTF-8";
-div.ingredient-group:nth-child(odd){
+@charset "EUC-KR";
+
+div.ingredient-group:nth-child(odd) {
 	float: left;
 	padding-right: 20px;
 }
 
-
-div.ingredient-group:nth-child(even){
+div.ingredient-group:nth-child(even) {
 	float: left;
-	padding-right: 0px;
+	padding-right: 0;
 }
 
-div.ingredient-group{
+div.ingredient-group {
 	width: 50%;
 }
 
-.grid:after{
+.grid:after {
 	content: "";
 	display: table;
 	clear: both;
@@ -26,6 +26,6 @@ div.ingredient-group{
 	box-sizing: border-box;
 }
 
-span.validationError{
+span.validationError {
 	color: red;
 }
