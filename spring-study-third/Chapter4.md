@@ -586,5 +586,99 @@ Order 개체와 User 개체를 연관 시키기 위해서 Order 클래스에서 
 processOrder() 메서드 : 주문을 저장하는 일 수행
 인증된 사용자가 누구인지 결정하고 Order 개체의 setUser()를 호출해 해당 주문을 사용자와 연결하도록 processOrder() 메서드를 수정해야 한다.
 
-Principal : 객체를 컨트롤러 메서드에 주입
+- Principal : 객체를 컨트롤러 메서드에 주입
+- Authentication : 객체를 컨트롤러 메서드에 주입
+- SecurityContextHolder : 보안 컨텍스트를 읽음
+- @AutheticationPrincipal :  어노테이션을 메서드에 지정
 
+principall 대신 Authentication 객체를 인자로 받도록 processOrder()를 변경할 수도 있다.
+
+```
+@PostMapping
+public String processOrder(@Valid Order order, Errors errors, SessionStatus sessionStatus, @Authentication Principal User user) {
+	if (errors.hasErrors()) {
+		return "orderForm";
+	}
+		
+	order.setUser(user);
+	
+	orderRepo.save(order);
+	sessionStatus.setComplete();
+		
+	return "redirect:/";
+}
+```
+
+- `@AuthenticationPrincipal`을 쓰면 타입 변환이 필요 없고 Authetication과 동일하게 보안 특정 코드만 갖는다. User 객체가 processOrder()에 전달되면 해당 주문(Order 객체)에서 사용할 준비가 된 것이다.
+
+- `OrderController 클래스의 orderForm()` : 사용자와 주문을 연관시키는 것에 추가하여 현재 주문을 하는 인증된 사용자의 이름을 주소를 주문 폼에 미리 채워서 보여줄 수 있다면 더욱 편리할 것이다. 그렇다면 사용자가 매번 주문을 할 때 마다 이름과 주소를 다시 입력할 필요가 없다.
+
+~~~	
+@GetMapping("/current")
+public String orderForm(@AuthenticationPrincipal User user,
+		@ModelAttribute Order order) {
+		
+	if(order.getDeliveryName() == null) {
+		order.setDeliveryName(user.getFullname());
+	}
+		
+	if(order.getDeliveryStreet() == null) {
+		order.setDeliveryStreet(user.getStreet());
+	}
+
+	if(order.getDeliveryCity() == null) {
+		order.setDeliveryCity(user.getCity());
+	}
+
+	if(order.getDeliveryState() == null) {
+		order.setDeliveryState(user.getState());
+	}
+
+	if(order.getDeliveryZip() == null) {
+		order.setDeliveryZip(user.getZip());
+	}
+		
+	return "orderForm";
+}
+~~~
+orderForm() 메서드에서는 인증된 사용자 User 객체를 메서드 인자로 받아서 해당 사용자의 이름과 주소를 Order 객체에 각 속성에 설정한다. 이렇게 하면 주문의 GET 요청이 제출될 때 해당 사용자의 이름과 주소가 미리 채워진 상태로 주문폼이 전송될 수 있다.
+
+
+- `DesignTacoController의 생성자와 showDesignForm()`
+주문 외에도 인증된 사용자 정보를 활용할 곳이 하다 더 있다. 즉, 사용자가 원하는 식자재를 선택하여 피자를 생성하는 디자인 폼에는 현재 사용자의 이름을 보여준다. 이때 UserRepository의 findByUsername() 메서드를 사용해 현재 디자인 폼으로 작업 중인 인증된 사용자를 찾아야 한다.
+
+```
+public class DesignPizzaController {
+	
+	private final IngredientRepository ingredientRepo;
+	private PizzaRepository pizzaRepo;
+	private UserRepository userRepo;
+
+	
+	@Autowired
+	public DesignPizzaController(IngredientRepository ingredientRepo, PizzaRepository pizzaRepo, UserRepository userRepo) {
+		this.ingredientRepo = ingredientRepo;
+		this.pizzaRepo = pizzaRepo;
+		this.userRepo = userRepo;
+	}
+	
+	@GetMapping
+	public String showDesignForm(Model model, Principal principal) { // 	Principal : 객체를 컨트롤러 메서드에 주입
+		// 매개변수는 컨트롤러의 메서드 Principal에서 사용됩니다 . Spring Security 지원 애플리케이션에서 현재 인증된 사용자를 나타냅니다 
+		List<Ingredient> ingredients = new ArrayList<>();
+		ingredientRepo.findAll().forEach(i -> ingredients.add(i));
+		
+		Type[] types = Ingredient.Type.values();
+		for (Type type : types) {
+			model.addAttribute(type.toString().toLowerCase(),
+					filterByType(ingredients, type));
+		}
+		
+		String username = principal.getName();
+		User user = userRepo.findByUsername(username);
+		model.addAttribute("user", user);
+		
+		
+		return "design";
+	}
+```
