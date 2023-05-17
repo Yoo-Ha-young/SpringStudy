@@ -9,9 +9,14 @@
 
 <body>
 	<h1>Design your pizza!</h1>
+	<h2>Feelin' hungry, <span th:text="${user.fullname}">NAME</span>?</h2>
 	<img th:src="@{/images/pizzacloud.jpg}" />
 	
-	<form method="POST" th:object="${pizza}">
+	<form method="POST" th:action="@{/logout}" id="logoutForm">
+		<input type="submit" value="Logout"/>
+	</form>
+	
+	<form method="POST" th:object="${pizza}" th:action="@{/design}" id="pizzaForm">
 		<span class="validationError"
 			th:if="${#fields.hasErrors('ingredients')}"
 			th:errors="*{ingredients}">Ingredient Error</span>

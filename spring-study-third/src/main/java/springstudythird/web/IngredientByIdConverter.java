@@ -1,10 +1,11 @@
 package springstudythird.web;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import springstudythird.*;
+import springstudythird.Ingredient;
 import springstudythird.data.IngredientRepository;
 
 import java.util.Optional;

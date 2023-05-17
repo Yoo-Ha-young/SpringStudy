@@ -3,15 +3,23 @@
 	  xmlns:th="http://www.thymeleaf.org">
   <head>
 	<meta charset="EUC-KR">
-	<title>Taco Cloud</title>
+	<title>Pizza Cloud</title>
 	<link rel="stylesheet" th:href="@{/styles.css}" />
   </head>
   <body>
+  
+  	<form method="POST" th:action="@{/logout}" id="logoutForm">
+		<input type="submit" value="Logout"/>
+	</form>
 	
-	<form method="POST" th:action="@{/orders}" th:object="${order}">
+	<form method="POST" th:action="@{/orders}" th:object="${order}" id="orderForm">
 		<h1>Order your pizza creations!</h1>
 		
-		<img th:src="@{/images/pizzacloud.jpg}" /> <a th:href="@{/design}"
+		<img th:src="@{/images/pizzacloud.jpg}" /> 
+		
+		<h3>Your pizzas in this order:</h3>
+		
+		<a th:href="@{/design}"
 			id="another">Design another pizza</a><br />
 
 		<ul>

@@ -11,14 +11,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.extern.slf4j.Slf4j;
-import springstudythird.data.IngredientRepository;
-import springstudythird.data.PizzaRepository;
 import springstudythird.Pizza;
-import springstudythird.*;
+import springstudythird.Order;
+import springstudythird.Ingredient;
 import springstudythird.Ingredient.Type;
+import springstudythird.data.IngredientRepository;
+
+import java.security.Principal;
+import springstudythird.data.UserRepository;
+import springstudythird.User;
 
 import javax.validation.Valid;
 import org.springframework.validation.Errors;
+import springstudythird.data.PizzaRepository;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
@@ -31,14 +36,17 @@ public class DesignPizzaController {
 	
 	private PizzaRepository pizzaRepo;
 	
+	private UserRepository userRepo;
+	
 	@Autowired
-	public DesignPizzaController(IngredientRepository ingredientRepo, PizzaRepository pizzaRepo) {
+	public DesignPizzaController(IngredientRepository ingredientRepo, PizzaRepository pizzaRepo, UserRepository userRepo) {
 		this.ingredientRepo = ingredientRepo;
 		this.pizzaRepo = pizzaRepo;
+		this.userRepo = userRepo;
 	}
 	
 	@GetMapping
-	public String showDesignForm(Model model) {
+	public String showDesignForm(Model model, Principal principal) {
 		List<Ingredient> ingredients = new ArrayList<>();
 		ingredientRepo.findAll().forEach(i -> ingredients.add(i));
 		
@@ -48,7 +56,9 @@ public class DesignPizzaController {
 					filterByType(ingredients, type));
 		}
 		
-		model.addAttribute("pizza", new Pizza());
+		String username = principal.getName();
+		User user = userRepo.findByUsername(username);
+		model.addAttribute("user", user);
 		
 		return "design";
 	}
