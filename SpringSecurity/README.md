@@ -56,7 +56,21 @@
 ### ② 세션 고정(Session Fixation)
 웹 어플리케이션의 더 구체적이고 심각한 약점으로 이 취약점이 존재한다면 이미 생성된 세션 ID를 재 이용해서 유효한 사용자를 가장할 수 있다. 이 취약성은 웹 어플리케이션이 인증 프로세스 중에 고유한 세선 ID를 할당하지 않아 기존 세션 ID가 재사용될 가능성이 있을 때 발생한다. 이 취약성을 악용한다면 유효한 세션 ID를 획득한 후 의도한 피해자의 브라우저기 이를 이용하게 해야 한다.
 
-### ③ XSS(교차 사이트 스크립팅)
 
+---
 
+# 로그인 폼 만들기 절차
+① 사용자가 폼에 아이디와 패스워드를 입력하면 HTTPServletRequest에 아이디와 비밀번호 정보가 전달된다. 이때 AuthenticationFilter가 넘어온 아이디와 비밀번호의 유효성 검사를 한다.
+② 유효성 검사가 끝마녀 실제 구현체인 UsernamePasswordAuthenticationToken을 만들어 넘겨준다.
+③ 전달받은 인증용 객체인 UsernamePasswordAuthenticationToken을 AuthenticationManager에게 보낸다.
+④ UsernamePasswordAuthenticationToken을 AuthenticationProveder에 보낸다.
+⑤ 사용자 아이디를 UserDetailService에 보낸다. UserDetailService는 사용자 아이디로 찾은 사용자의 정보를 UserDetails 객체로 만들어 AuthenticationProvider에게 전달한다.
+⑥ DB에 있는 사용자 정보를 가져온다.
+⑦ 입력 정보와 UserDetails의 정보를 비교해 실제 인증 처리를 한다.
+⑧ AuthenticationProvider(s) 에서 AuthenticationManager<interface>로 넘긴다.
+⑨ AuthenticationManager<interface>에서 AuthenticationFilter로 넘긴다.
+⑩ AuthenticationFilter에서 SecurityContextHolder로 넘긴다.
+  
+⑧~⑩까지 인증이 완료되면 SecurityContextHolder에 Authentication를 저장한다.
 
+인증 성공 여부에 따라 성공하면 AutehticationSuccessHandler, 실패하면 AuthenticationFailuerHandler 핸들러를 실행한다.
