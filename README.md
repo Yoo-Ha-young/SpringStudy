@@ -136,4 +136,175 @@ PSA : 어느 기술을 사용하던 일관된 방식으로 처리한다.
 - spring-boot-satrter-data-jpa : ORM을 사용하기 위한 인터페이스의 모음인 JPA를 더 쉽게 사용하기 위한 의존성 모음
 
 
+# 스프링 부트 구조
+### 프레젠테이션 계층 : 컨트롤러 
+HTTP 요청을 받고 이 요청을 비지니스 계층에 전송하는 역할이다.
+컨트롤러가 바로 프레젠테이션 계층의 역할을 한다.
+↕
+### 비지니스 계층 : 서비스
+모든 비지니스 로직을 처리하며, 서비스를 만들기 위한 로직이다.
+웹 사이트에서 벌어지는 모든 작업으로 주문 서비스라 한다면 주문갯수, 가격 등의 데이터를 처리하기 위한 로직, 주문 처리를 하다 발생하는 예외처리 로직, 주문을 받거나 취소 하는 등의 프로세스를 구현하는 로직이다. 서비스가 비즈니스 계층의 역할을 한다.
+↕
+### 퍼시스턴스 계층 : 레파지토리
+모든 데이터베이스 관련 로직을 처리하며 데이터베이스에 접근하는 DAO 객체를 사용할 수도 있다. DAO는 데이터 베이스 계층과 상호작용하기 위한 객체이며 레파지토리가 퍼시스턴스 계층의 역할을 한다.
+↕
+### 데이터베이스
 
+
+# 테스트 코드
+~~~
+- spring-boot-starter-test : 스타터에 테스트를 위한 도구 모음
+- Spring Test & Spring Boot Test : 스프링 부트 어플리케이션을 위한 통합 테스트 지원
+~~~
+
+test 디렉터리에서 작업하며 테스트 코드엔 `given-when-then` 같은 다양한 패턴이 있다.
+- given :  테스트 실행을 준비하는 단계
+- when : 테스트를 진행하는 단계
+- then : 테스트 결과를 검증하는 단계
+
+```
+@DisplayName("새로운 메뉴를 저장한다.")
+@Test
+public void saveMenuTest() {
+// given :  메뉴를 저장하기 위한 준비 과정
+final String name = "아메리카노";
+final int price = 2000;
+
+// when : 실제로 메뉴를 저장
+final long savedId = menuService.save(americano);
+
+// then :  메뉴가 잘 추가되었는지 검증
+final Menu savedMenu = menuService.findById(savedId).get();
+assertThat(savedMenu.getName()).isEqualTo(name);
+assertThat(savedMenu.getPrice()).isEqualTo(price);
+}
+```
+
+
+- Hamcrest : 표현식을 보다 이해하기 쉽게 만드는 데 사용되는 Matcher 라이브러리
+- Mockito : 테스트에 사용할 가짜 객체인 목 객체를 쉽게 만들고, 관리하고, 검증할 수 있게 지원하는 테스트 프레임워크
+- JSONassert : JSON용 어설션 라이브러리
+- JsonPath : JSON 데이터에서 특정 데이터를 선택하고 검색하기 위한 라이브러리
+
+
+## JUnit : 자바 프로그래밍 언어용 단위 테스트 프레임워크
+단위 테스트 프레임워크로 작성한 코드가 의도대로 작동되는지 작은 단위로 검증하는 것을 의미한다. 이때 보통 메서드가 된다. JUnit을 사용하면 단위 테스트를 작성하고 테스트하는데 도움을 준다. 테스트 결과가 직관적이라 좋고 구체적인 JUnit의 특징으로는 테스트 방식을 구분할 수 있는 어노테이션을 제공한다. @Test 어노테이션으로 메서드를 호출할 때 마다 새 인스턴스를 생성하고 독립 테스트가 가능하다. 예상 결과를 검증하는 어션설 메서드를 제공하고 사용방법이 단순하며, 테스트 코드 작성 시간이 적다. 자동실행, 자체 결과를 확인하고 즉각적인 피드백을 제공한다.
+
+
+## AssertJ : 검증문인 어설션을 작성하는 데 사용되는 라이브러리
+JUnit과 함께 사용해 검증문의 가독성을 높여주는 라이브러리이다.
+`assertThat(a+b)/isEqualTo(sum);`
+- isEquealto(A) : A 값과 같은지 검증
+- isNotEqualTo(A) : A 값과 다른지 검증
+- contains(A) : A값을 포함하는지 검증
+- doesNotContain(A) : A 값을 포함하지 않는지 검증
+- startsWith(A) : 접두사가 A인지 검증
+- endsWith(A) : 접미사가 A인지 검증
+- isEmpty() : 비어있는 값인지 검증
+- isNotEmpty() : 비어있지 않은 값인지 검증
+- isPositive() : 양수인지 검증
+- isNegative() : 음수인지 검증
+- isGreaterThan(1) : 1보다 큰 값인지 검증
+- isLessThan(1) : 1보다 작은 값인지 검증
+
+
+### HTTP 주요 응답코드
+- isOk() :  200 OK
+- isCreated() : 201 Created
+- isBadRequest() :  400 Bad Request
+- isForbidden() : 403 Forbidden
+- isNOtFound() : 404 Not Found
+- is4xxClientError() :  400번대 응답 코드
+- isInternalErverError(): 500 Internal Server Error
+- is5xxServerError() : 500번대 응답 코드
+
+# 스프링 데이터
+
+## 1. Service에서 JPA repository 
+```
+@Service
+public class MemberServie {
+@Autowired
+MemberRepository memberRepository;
+
+  public void test(){
+    // ① 생성
+    memberRepository.save(new Member(1L, "A"));
+    // ② 조회
+    Optional<member> member = memberRepository.findById(1L); // 단건 조회
+    List<Member> allMembers = memberRepository.findAll();
+    // ③ 삭제
+    memberRepository.deltedById(1L);
+  }
+}
+```
+
+
+① 생성 Creat : save() 메서드
+데이터 객체를 저장할 수 있으며, 전달 인수로 엔터티 Member를 넘기면 반환값으로 저장한 엔티티를 반환받을 수 있다.
+
+② 조회 Select
+- `findById()` 메서드에 id를 지정해 엔티티를 하나 조회할 수 있다.
+- `findAll()` 메서드는 전체 엔티티를 조회한다.
+
+③ 삭제 Delete
+deletedById() 메서드에 id를 지정하면 엔티티를 삭제할 수 있다.
+
+
+## 2. @Entity
+~~~
+@Entity // ① 엔티티로 지정
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // ② 기본 생성자
+@AllArgsConstructor
+
+public class Member {
+  
+  @Id // ③ id 필드를 기본키로 지정
+  @GeneratedValue(strategy = GenerationType.IDENTITY) // ④ 기본키 자동으로 1씩 증가
+  @Column(name = "id", updatable = false)
+  privete Long id;
+  
+  @Column(name = "name", nullable = false) // ⑤ name이라는 notnull 컬럼과 매핑
+  private String name;
+
+}
+~~~
+- **① 엔티티로 지정**
+Member 객체를 JPA가 관리하는 엔티티로 지정한다. 즉 Member 클래스와 실제 데이터베이스의 테이블을 매핑시킨다. 
+- name 속성 : name의 값을 가진 테이블 이름과 매핑되고 테이블 이름을 지정하지 않으면 클래스 이름과 같은 이름의 테이블과 매핑된다.
+```
+@Entitu(name="member_list")
+public class Article {
+ ...
+}
+```
+
+- **② 기본 생성자**
+protected 기본 생성자로 엔티티는 반드시 기본 생성자가 있어야 하고, 접근 제어자는 public 또는 protected여야 한다. public 보다는 protected가 더 안전하므로 접근 제어자가 protected인 기본 생성자를 생성한다.
+
+- **③ @Id 어노테이션 : id 필드를 기본키로 지정**
+
+- **④ @GeneratedValue : 기본키의 생성 방식 결정**
+```
+AUTO : 선택한 데이터베이스 방언(dialect)에 따라 방식을 자동으로 선택(기본값)
+IDENTITY : 기본 키 생성을 데이터베이스에 위임(=AUTO_INCREMENT)
+SEQUENCE : 데이터베이스 시퀀스를 사용해서 기본 키를 할당하는 방법, 오라클에서 주로 사용
+TABLE : 키 생성 테이블 사용
+```
+ 
+- **⑤ @Column : 데이터베이스의 컬럼과 필드를 매핑**
+~~~
+name : 필드와 매핑할 컬럼 이름, 설정하지 않으면 필드 이름으로 지정
+nullable : 컬럼의 null 허용 여부, 설정하지 않으면 true(nullable)
+unique : 컬럼의 유일한 값(unique) 여부, 설정하지 않으면 false(non-unique)
+columnDefinition : 컬럼 정보 설정, default값을 줄 수 있다.
+~~~
+
+## 3. Repository
+```
+@Repository
+public interface MemberRepository extends JpaRepository<Member, Long> {
+}
+```
+엔터티에 있는 데이터들을 조회하거나 저장, 변경, 삭세즐 할 때 사용하는 인터페이스로 스프링 데이터 JPA에서 제공하는 인터페이스 JpaRepository 클래스를 상속받아 간단하게 구현할 수 있다. 상속받을 때 엔티티 클래스와 엔티티의 기본키 타입을 인수로 넣어준다.
